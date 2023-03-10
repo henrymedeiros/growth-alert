@@ -9,7 +9,7 @@ def read_links_from_txt():
         links = f.read().splitlines()
         return links
 
-def check_availability(page_html):
+def check_availability():
     not_available_buy_button = page_html.find('.btIndisponivel', first=True)
     if not_available_buy_button:
         return False
@@ -42,18 +42,20 @@ def send_mail(product, user_email, password, email_list = []):
         s.sendmail(user_email, user_email, msg.as_string().encode('utf-8'))
     print('Email enviado!')
 
+def main():
+    load_dotenv()
+    session = HTMLSession()
+    links = read_links_from_txt()
 
-load_dotenv()
-session = HTMLSession()
-links = read_links_from_txt()
+    for link in links:
+        r = session.get(link)
+        r.html.render(sleep=2)
+        page_html = r.html
+        product = get_product_data(page_html)
+        print(product)
+        if(product['is_available']):        
+            send_mail(product, os.getenv('USER_EMAIL'), os.getenv('APP_PASSWORD'), os.getenv('EMAIL_LIST').split(','))
 
-for link in links:
-    r = session.get(link)
-    r.html.render(sleep=2)
-    page_html = r.html
-    product = get_product_data(page_html)
-    print(product)
-    if(product['is_available']):        
-        send_mail(product, os.getenv('USER_EMAIL'), os.getenv('APP_PASSWORD'), os.getenv('EMAIL_LIST').split(','))
+main()
     
 
