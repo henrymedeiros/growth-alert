@@ -14,22 +14,23 @@ def read_links_from_txt():
 
 links = read_links_from_txt()
 
-def get_product_data(link, page_html):
-    name = r.html.find('.topoDetalhe-boxRight-nome', first=True)
-    price = r.html.find('[data-desconto-boleto-valor]', first=True)
-    if name is None or price is None:
-        print('erro ao pegar infos do produto')
-    product = {
-        'name': name.text,
-        'price': price.text
-    }
-    return product
-
-def check_availability(link, page_html):
-    not_available_buy_button = r.html.find('.btIndisponivel', first=True)
+def check_availability(page_html):
+    not_available_buy_button = page_html.find('.btIndisponivel', first=True)
     if not_available_buy_button:
         return False
     return True
+
+def get_product_data(page_html):
+    name = page_html.find('.topoDetalhe-boxRight-nome', first=True).text
+    price = page_html.find('[data-desconto-boleto-valor]', first=True).text
+    if name is None or price is None:
+        print('erro ao pegar infos do produto')
+    product = {
+        'name': name,
+        'price': price,
+        'is_available': check_availability(page_html),
+    }
+    return product
 
 def send_mail(product, user_email, password):
     msg = email.message.Message()
@@ -40,15 +41,16 @@ def send_mail(product, user_email, password):
     s.starttls()
     s.login(user_email, password)
     s.sendmail(user_email, user_email, msg.as_string().encode('utf-8'))
+    print('Email enviado!')
 
 
 for link in links:
     r = session.get(link)
-    page_html = r.html.render(sleep=2)
-    product = get_product_data(link,page_html)
-    is_available = check_availability(link,page_html)
-    print(product, '\n', is_available)
-    if(is_available):
+    r.html.render(sleep=2)
+    page_html = r.html
+    product = get_product_data(page_html)
+    print(product)
+    if(product['is_available']):
         send_mail(product, os.getenv('USER_EMAIL'), os.getenv('APP_PASSWORD'))
     
 
