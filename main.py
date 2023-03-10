@@ -32,7 +32,7 @@ def get_product_data(page_html):
     }
     return product
 
-def send_mail(product, user_email, password):
+def send_mail(product, user_email, password, email_list = []):
     msg = email.message.Message()
     msg['Subject'] = f"[ALERTA GROWTH] - {product['name']}"
     msg.add_header('Content-Type', 'text/html')
@@ -40,8 +40,13 @@ def send_mail(product, user_email, password):
     s = smtplib.SMTP('smtp.gmail.com: 587')
     s.starttls()
     s.login(user_email, password)
-    s.sendmail(user_email, user_email, msg.as_string().encode('utf-8'))
+    if(len(email_list) > 0):
+        for e in email_list:
+            s.sendmail(user_email, e, msg.as_string().encode('utf-8'))
+    else:
+        s.sendmail(user_email, user_email, msg.as_string().encode('utf-8'))
     print('Email enviado!')
+
 
 
 for link in links:
@@ -50,7 +55,7 @@ for link in links:
     page_html = r.html
     product = get_product_data(page_html)
     print(product)
-    if(product['is_available']):
-        send_mail(product, os.getenv('USER_EMAIL'), os.getenv('APP_PASSWORD'))
+    if(product['is_available']):        
+        send_mail(product, os.getenv('USER_EMAIL'), os.getenv('APP_PASSWORD'), os.getenv('EMAIL_LIST').split(','))
     
 
