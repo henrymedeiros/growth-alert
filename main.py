@@ -4,15 +4,10 @@ import email.message
 from dotenv import load_dotenv
 from requests_html import HTMLSession
 
-load_dotenv()
-session = HTMLSession()
-
 def read_links_from_txt():
     with open('links.txt', 'r') as f:
         links = f.read().splitlines()
         return links
-
-links = read_links_from_txt()
 
 def check_availability(page_html):
     not_available_buy_button = page_html.find('.btIndisponivel', first=True)
@@ -48,6 +43,9 @@ def send_mail(product, user_email, password, email_list = []):
     print('Email enviado!')
 
 
+load_dotenv()
+session = HTMLSession()
+links = read_links_from_txt()
 
 for link in links:
     r = session.get(link)
